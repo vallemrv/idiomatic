@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load static %}
+{% load global_tag %}
+
+{% block content %}
+    <div class="content">
+       <div class="bg-light text-uppercase p-2 mt-2 mb-2">
+          <h3>Final de leccion...</h3>
+       </div>
+       <div id="test">
+         {% if obj.tipo == "SN" %}
+           <audio controls>
+               <source src="{{obj.fichero.url}}">
+                Your browser does not support the audio element.
+           </audio>
+         {% else %}
+           <video width="100%" controls>
+             <source src="{{obj.fichero.url}}">
+            Your browser does not support the video tag.
+          </video>
+        {% endif %}
+      </div>
+    </div>
+  {% endblock %}

@@ -1,0 +1,26 @@
+{% include "gestion/base.html" %}
+{% block content %}
+<div class="bg-light p-2">
+  <table class="table">
+     <thead class="thead-dark">
+       <tr>
+         <th>Nombre</th>
+         <th>Descripcion</th>
+         <th>#</th>
+       </tr>
+     </thead>
+     <tbody>
+        {% for obj in result %}
+           <tr>
+              <th>{{obj.nombre}}</th>
+              <th>{{obj.descripcion}}</th>
+              <th><a href="{% url 'set_curso_gs' id=obj.id %}">
+                <i class="fas fa-check"></i>
+              </a></th>
+           </tr>
+        {% endfor %}
+     </tbody>
+  </table>
+</div>
+
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+   <div class="content mt-2">
+     <ul class="list-group">
+        <li class="list-group-item active">Elegir curso</li>
+        {% for obj in result  %}
+          <li class="list-group-item list-group-item-action list-group-item-light"
+              onclick="location.href='{% url 'sel_curso' id=obj.id %}'">
+              <div class="row">
+                <div class="col-4">
+                  {{obj.nombre}}
+                </div>
+                <div class="col-8">
+                   {{obj.descripcion}}
+                </div>
+              </div>
+          </li>
+        {% endfor %}
+      </ul>
+   </div>
+{% endblock %}
