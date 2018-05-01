@@ -27,8 +27,14 @@ class CursosAdmin(admin.ModelAdmin):
     list_display = ["nombre", "descripcion"]
 
 
+class FrasesInline(admin.TabularInline):
+    model = Frases
+
 class LeccionAdmin(admin.ModelAdmin):
     list_display = ["nombre", "objetivo"]
+    inlines = [
+        FrasesInline
+    ]
 
 
 class FrasesAdmin(admin.ModelAdmin):

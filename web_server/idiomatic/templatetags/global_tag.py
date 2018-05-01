@@ -3,10 +3,10 @@
 # @Date:   09-Apr-2018
 # @Email:  valle.mrv@gmail.com
 # @Last modified by:   valle
-# @Last modified time: 16-Apr-2018
+# @Last modified time: 24-Apr-2018
 # @License: Apache license vesion 2.0
 
-from django.db.models import Sum
+from django.db.models import Avg, Sum
 from django import template
 from django.conf import settings
 from idiomatic.models import Frases, Progreso
@@ -41,7 +41,9 @@ def progreso(session, id=None):
     total = len(frases) * max_repetir
     pg = Progreso.objects.filter(frase_id__in=frases, estudiante=estudiante).aggregate(Sum("puntos"))
     if pg["puntos__sum"] != None:
-        progreso_int = (pg["puntos__sum"] * 100) / total
-        return int(progreso_int) if int(progreso_int) < 100 else 100
+        minimos = Progreso.objects.filter(frase_id__in=frases, estudiante=estudiante, puntos__lt=max_repetir).count()
+        progreso_int = ((pg["puntos__sum"] * 100) / total)
+        progress = int(progreso_int) if int(progreso_int) < 100 else (100 - minimos)
+        return progress
     else:
         return 0

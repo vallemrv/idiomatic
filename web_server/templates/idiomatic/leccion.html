@@ -28,7 +28,16 @@
 
         function error(id){
           url = "{% url 'calificar' id=-1 punto=-2 %}"
-          $.get(url.replace("-1", id).replace("-2", 0), function(res){
+          $.get(url.replace("-1", id).replace("-2", -1), function(res){
+             $("#test").html(res);
+             progreso = $("#progreso").val();
+             $(".progress-bar").css({'width': progreso+"%"});
+          });
+        }
+
+        function quitar(id){
+          url = "{% url 'calificar' id=-1 punto=-2 %}"
+          $.get(url.replace("-1", id).replace("-2", 6), function(res){
              $("#test").html(res);
              progreso = $("#progreso").val();
              $(".progress-bar").css({'width': progreso+"%"});

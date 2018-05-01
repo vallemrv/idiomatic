@@ -2,7 +2,7 @@
 # @Date:   13-Jan-2018
 # @Email:  valle.mrv@gmail.com
 # @Last modified by:   valle
-# @Last modified time: 17-Apr-2018
+# @Last modified time: 22-Apr-2018
 # @License: Apache license vesion 2.0
 
 
@@ -10,6 +10,7 @@ from __future__ import unicode_literals
 
 from django.db import models
 from django.db.models.signals import pre_save, pre_delete
+from django.conf import settings
 import os
 import uuid
 
@@ -54,7 +55,7 @@ class Lecciones(models.Model):
     nombre = models.CharField(max_length=100)
     curso = models.ForeignKey("Cursos", on_delete=models.CASCADE)
     objetivo = models.TextField(default="")
-    recursos = models.ManyToManyField("Recursos")
+    recursos = models.ManyToManyField("Recursos", blank=True)
 
     def __str__(self):
         return self.nombre
@@ -66,8 +67,8 @@ class Lecciones(models.Model):
 
 
 class Frases(models.Model):
-    propia = models.CharField(max_length=200)
-    extranjera = models.CharField(max_length=200)
+    propia = models.CharField(max_length=300)
+    extranjera = models.CharField(max_length=300)
     leccion = models.ForeignKey("Lecciones", on_delete=models.CASCADE)
 
     def __str__(self):
@@ -75,12 +76,11 @@ class Frases(models.Model):
 
     def save(self, *args, **kwargs):
         super(Frases, self).save(*args, **kwargs)
-        self.pronunciacion_set.all().remove()
+        self.pronunciacion_set.all().delete()
 
     class Meta:
         verbose_name = "Frase"
         verbose_name_plural = 'Frases'
-
 
 
 class Pronunciacion(models.Model):
@@ -94,14 +94,17 @@ class Pronunciacion(models.Model):
 
 class Recursos(models.Model):
     nombre = models.CharField(max_length=100)
-    nota = models.TextField()
-    fichero = models.FileField(null=True, upload_to='final_leccion')
-    tipo = models.CharField(max_length=2, choices=[("VD", "Video"), ("SN", "Sonido")], default="SN")
+    res_external = models.CharField("Url youtube", max_length=100, blank=True, null=True)
+    nota = models.TextField(blank=True)
+    fichero = models.FileField(null=True, blank=True, upload_to='final_leccion')
+    tipo = models.CharField(max_length=2, choices=[("VD", "Video"), ("SN", "Sonido"), ("EX", "Youtube")], default="EX")
 
     def __str__(self):
-        return self.leccion.nombre
+        return self.nombre
 
-
+    class Meta:
+        verbose_name = "Recurso"
+        verbose_name_plural = 'Recursos'
 
 class Helpers(models.Model):
     frase = models.ForeignKey("Frases", on_delete=models.CASCADE)
@@ -119,15 +122,16 @@ class Progreso(models.Model):
     puntos = models.IntegerField(default=0)
 
 
-
 def auto_delete_file_on_delete(sender, instance, **kwargs):
     """
     Deletes file from filesystem
     when corresponding `MediaFile` object is deleted.
     """
+
     if instance.fichero:
-        if os.path.isfile(instance.fichero.path):
-            os.remove(instance.fichero.path)
+        path = os.path.join(settings.MEDIA_ROOT, instance.fichero.name)
+        if os.path.isfile(path):
+            os.remove(path)
 
 
 pre_delete.connect(auto_delete_file_on_delete, sender=Idiomas)
@@ -151,8 +155,9 @@ def auto_delete_file_on_change(sender, instance, **kwargs):
 
     new_file = instance.fichero
     if not old_file == new_file:
-        if os.path.isfile(old_file.path):
-            os.remove(old_file.path)
+        path = os.path.join(settings.MEDIA_ROOT, instance.fichero.name)
+        if os.path.isfile(path):
+            os.remove(path)
 
 
 

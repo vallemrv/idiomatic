@@ -2,11 +2,11 @@
 # @Date:   13-Jan-2018
 # @Email:  valle.mrv@gmail.com
 # @Last modified by:   valle
-# @Last modified time: 16-Apr-2018
+# @Last modified time: 21-Apr-2018
 # @License: Apache license vesion 2.0
 from .gestion import *
 
-from django.db.models import Q
+from django.db.models import Q, Avg
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.conf import settings
@@ -60,34 +60,44 @@ def leccion(request):
     if "estudiante" not in request.session:
         request.session["estudiante"] = str(uuid.uuid4())
     if "leccion" not in request.session:
-        redirect("home")
+        return redirect("home")
     leccion = Lecciones.objects.get(pk=request.session["leccion"])
     return render(request, "idiomatic/leccion.html", {
         "session": request.session,
         "title": leccion.nombre,
     })
 
-
 def get_next_frase(request):
     if "estudiante" not in request.session:
         request.session["estudiante"] = str(uuid.uuid4())
     if "leccion" not in request.session:
         redirect("home")
-    estudiante = request.session["estudiante"]
-    leccion = Lecciones.objects.get(pk=request.session["leccion"])
-    frases = leccion.frases_set.all()
-    ids_frases = list(frases.values_list("id", flat=True))
-    ids_progres = list(Progreso.objects.filter(frase_id__in=ids_frases,
-                                               estudiante=estudiante,
-                                               puntos__gte=5).values_list('frase_id', flat=True))
-
-    frases = frases.exclude(id__in=ids_progres)
-    if len(frases) > 0:
-        frase = frases[random.randint(0,len(frases)-1)]
+    estado = request.session["estado"]
+    if estado["punt"] < len(estado["prg"]):
+        id = estado["prg"][estado["punt"]]
+        frase = Frases.objects.get(id=id)
+        estado["punt"] = estado["punt"] + 1
     else:
-        frases = leccion.frases_set.all()
-        frase = frases[random.randint(0,len(frases)-1)]
+        estado["punt"] = 0
+        frases = get_lista_frases(request)
+        if len(frases) > 0:
+            s = list(frases.values_list("id", flat=True))
+            random.shuffle(s)
+            estado["prg"] = s
+            id = s[estado["punt"]]
+            frase = Frases.objects.get(id=id)
+            estado["punt"] = estado["punt"] + 1
+        else:
+            request.session["contador"] = get_contador(request)
+            frases = get_lista_frases(request)
+            s = list(frases.values_list("id", flat=True))
+            random.shuffle(s)
+            estado["prg"] = s
+            id = s[estado["punt"]]
+            frase = Frases.objects.get(id=id)
+            estado["punt"] = estado["punt"] + 1
 
+    request.session["estado"] = estado
     return render(request, "idiomatic/leccion_ajax.html", {
         "frase": frase,
         "session": request.session
@@ -108,9 +118,8 @@ def calificar(request, id, punto):
 
 def get_final(request):
     leccion = Lecciones.objects.get(pk=request.session["leccion"])
-    gift = leccion.finalleccion_set.all()
+    gift = leccion.recursos.all()
     if len(gift) > 0:
-        print( gift[0])
         return render(request, "idiomatic/gift.html", {
             "session": request.session,
             "obj": gift[0]
@@ -127,10 +136,10 @@ def view_logo(request, id):
     except Exception as e:
         print("[ Error en view_logo ] %s" % e)
 
-    file_rml = os.path.join(settings.MEDIA_ROOT, obj.logo.name )
+    file_rml = os.path.join(settings.MEDIA_ROOT, obj.fichero.name )
     f = open(file_rml, "rb")
     response = HttpResponse(content_type='image/*')
-    response['Content-Disposition'] = 'inline; filename="%s"' % os.path.basename(obj.logo.name)
+    response['Content-Disposition'] = 'inline; filename="%s"' % os.path.basename(obj.fichero.name)
     response.write(f.read())
     return response
 
@@ -142,7 +151,7 @@ def get_sound(request, id):
         name = "pronunciacion/" +str(uuid.uuid4())+".mp3"
         file_rml = os.path.join(settings.MEDIA_ROOT,  name)
         tts.save(file_rml)
-        sonido = obj.pronunciacion_set.create(pronunciacion=name, tipo='SN')
+        sonido = obj.pronunciacion_set.create(fichero=name, tipo='SN')
         return file_rml
 
     try:
@@ -154,7 +163,7 @@ def get_sound(request, id):
     num_sounds = len(sounds)
     if num_sounds > 0:
         sonido = sounds[random.randint(0, num_sounds-1)]
-        file_rml = os.path.join(settings.MEDIA_ROOT, sonido.pronunciacion.name )
+        file_rml = os.path.join(settings.MEDIA_ROOT, sonido.fichero.name )
         if not os.path.isfile(file_rml):
             file_rml = crear_sonido()
     else:
@@ -162,13 +171,15 @@ def get_sound(request, id):
 
     f = open(file_rml, "rb")
     response = HttpResponse(content_type='audio/*')
-    response['Content-Disposition'] = 'inline; filename="%s"' % os.path.basename(sonido.pronunciacion.name)
+    response['Content-Disposition'] = 'inline; filename="%s"' % os.path.basename(file_rml)
     response.write(f.read())
     return response
 
 
 def sel_leccion(request, id):
     request.session["leccion"] = id
+    request.session["contador"] = get_contador(request)
+    request.session["estado"] = {"prg":[], "punt": 0}
     return redirect("leccion")
 
 
@@ -189,3 +200,29 @@ def elegir_idioma(request):
     if "leccion" in request.session:
         del request.session["leccion"]
     return redirect("home", permanent=False)
+
+
+def get_contador(request):
+    estudiante = request.session["estudiante"]
+    leccion = Lecciones.objects.get(pk=request.session["leccion"])
+    frases = leccion.frases_set.all()
+    ids_frases = list(frases.values_list("id", flat=True))
+    max = Progreso.objects.filter(frase_id__in=ids_frases,
+                                  estudiante=estudiante).aggregate(Avg("puntos"))
+
+    if max["puntos__avg"] == None:
+        return 1
+    else:
+        return int(max["puntos__avg"])
+
+
+def get_lista_frases(request):
+    estudiante = request.session["estudiante"]
+    leccion = Lecciones.objects.get(pk=request.session["leccion"])
+    all_frases = leccion.frases_set.all()
+    ids_frases = list(all_frases.values_list("id", flat=True))
+    ids_progres = list(Progreso.objects.filter(frase_id__in=ids_frases,
+                                               estudiante=estudiante,
+                                               puntos__gt=request.session["contador"]).values_list('frase_id', flat=True))
+
+    return all_frases.exclude(id__in=ids_progres)

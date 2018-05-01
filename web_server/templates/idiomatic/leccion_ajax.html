@@ -17,6 +17,9 @@
          </div>
           <div id="respuesta" class="text-center collapse">
             <p class="h2"> {{frase.extranjera}}</p>
+            <button  class="btn btn-light btn-lg  m-1"  onclick="quitar({{frase.id}});">
+             Ya me la se</span>
+           </button>
           </div>
        </div>
      </div>
@@ -31,7 +34,7 @@
          {% if  session|progreso == 100 %}
            <button  class="btn btn-light btn-lg m-1 text-warning"
             onclick="location.href='{% url 'get_final' %}'">
-               <span class="fas fas fa-gift"></span>
+               <span class="fas fa-eye"></span>
           </button>
         {% endif %}
         </div>
