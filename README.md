@@ -1,2 +1,2 @@
 # idiomatic
-App web for learning ant language
+App web for learning any language
