@@ -9,7 +9,13 @@
        </div>
        <div class="card-body content-foreing">
          <div id="ayuda" class="text-center">
-           <p class="alert alert-primary" role="alert"> Como se diria esta frase. Piesaaaa!!</p>
+           <p class="alert alert-primary" role="alert">
+             <ul>
+                <li>1º Mira si sabes decirla.</li>
+                <li>2º Si no escuchala 5 veces antes de ver la respuesta.</li>
+                <li>3º Abre la caja y mira la respuesta.</li>
+             </ul>
+           </p>
            <audio controls>
                <source src="{% url 'get_sound' id=frase.id %}" type="audio/mp3">
                 Your browser does not support the audio element.
