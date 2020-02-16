@@ -53,7 +53,7 @@ def create_student(request):
 
 @is_student_registered
 def home(request):
-    return show_home_page()
+    return show_home_page(request)
 
 
 @is_student_registered
@@ -92,6 +92,7 @@ def get_next_frase(request):
     if "leccion" not in request.session:
         redirect("home")
     estado = request.session["estado"]
+    frases = get_lista_frases(request)
     if estado["punt"] < len(estado["prg"]):
         id = estado["prg"][estado["punt"]]
         frase = Frases.objects.get(id=id)
@@ -132,6 +133,12 @@ def calificar(request, id, punto):
         progreso = ps[0]
 
     progreso.puntos = progreso.puntos + int(punto)
+    num_frases = count_frases(request)
+    if progreso.puntos < 0:
+        progreso.puntos = 0
+    elif progreso.puntos > num_frases:
+        progreso.puntos = num_frases
+
     progreso.save()
     return redirect('get_next_frase')
 
@@ -245,3 +252,7 @@ def get_lista_frases(request):
                                                puntos__gt=request.session["contador"]).values_list('frase_id', flat=True))
 
     return all_frases.exclude(id__in=ids_progres)
+
+def count_frases(request):
+    leccion = Lecciones.objects.get(pk=request.session["leccion"])
+    return leccion.frases_set.all().count()

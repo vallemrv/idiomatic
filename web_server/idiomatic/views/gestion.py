@@ -32,23 +32,59 @@ def elegir_curso_gs(request):
 @login_required(login_url="admin:login")
 def crear_leccion(request):
     if request.method == "POST":
-        lineas_local = request.POST["principal"].split("\n")
-        lienas_extranjero = request.POST["extranjero"].split("\n")
-        lec = Lecciones(curso_id=request.session["curso_gs"],
-                        nombre=request.POST["nombre"],
-                        objetivo=request.POST["des"])
-        lec.save()
-        for i in range(0, len(lineas_local)-1):
+        lec = Lecciones.objects.filter(id=request.session["leccion_gs"])
+        lineas = request.POST["preguntas"].split("\n")
+        lineas_local = []
+        lienas_extranjero = []
+        for l in lineas:
+            sl = l.split(" # ")
+            if len(sl) == 2:
+                lineas_local.append(sl[0].strip())
+                lienas_extranjero.append(sl[1].strip())
+        if lec:
+            lec = lec.first()
+            lec.nombre = nombre=request.POST["nombre"]
+            lec.objetivo = request.POST["des"]
+            lec.save()
+            lec.frases_set.all().delete()
+        else:
+            lec = Lecciones(curso_id=request.session["curso_gs"],
+                            nombre=request.POST["nombre"],
+                            objetivo=request.POST["des"])
+            lec.save()
+
+        for i in range(0, len(lineas_local)):
             lec.frases_set.create(propia=lineas_local[i],
                                   extranjera=lienas_extranjero[i])
+        return redirect("lista_lecciones_gs", id=request.session["curso_gs"])
 
-
-    return render(request, "gestion/lecciones/crear.html")
+    lec = Lecciones.objects.filter(id=request.session["leccion_gs"])
+    if lec:
+        lec = lec.first()
+        frases = []
+        for f in lec.frases_set.all():
+            frases.append("%s # %s" % (f.propia, f.extranjera))
+        return render(request, "gestion/lecciones/editar.html",{
+             "nombre":lec.nombre,
+             "des":lec.objetivo,
+             "frases": "\n".join(frases)
+        })
+    else:
+        return render(request, "gestion/lecciones/crear.html")
 
 @login_required(login_url="admin:login")
-def set_curso_gs(request, id):
+def lista_lecciones_gs(request, id):
     request.session["curso_gs"] = id
-    return redirect('crear_leccion')
+    result = Lecciones.objects.filter(curso_id=id)
+    return render(request, "gestion/lecciones/elegir_leccion.html", {
+        "result": result,
+        "session": request.session
+    })
+
+@login_required(login_url="admin:login")
+def set_leccion_gs(request, id):
+    request.session["leccion_gs"] = id
+    return crear_leccion(request)
 
 
 @login_required(login_url="admin:login")
