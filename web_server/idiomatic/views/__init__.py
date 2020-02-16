@@ -10,15 +10,14 @@ from django.db.models import Q, Avg
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.conf import settings
-from idiomatic.models import Idiomas, Cursos, Lecciones, Frases, Progreso
+from idiomatic.models import (Idiomas, Cursos, Lecciones, Frases,
+                              Progreso, Estudiante)
+from idiomatic.decorators import is_student_registered
 import os
 import random
 import uuid
 
-
-def home(request):
-    if "estudiante" not in request.session:
-        request.session["estudiante"] = str(uuid.uuid4())
+def show_home_page(request):
     if "idioma" in request.session:
         if "curso" in request.session:
             if "leccion" in request.session:
@@ -33,9 +32,32 @@ def home(request):
         "session": request.session
     })
 
+def create_student(request):
+    print(request.POST)
+    if "nick" in request.POST and request.POST["nick"] != "":
+        nick = request.POST["nick"]
+        uid = ""
+        s = Estudiante.objects.filter(nick=nick)
+        if s:
+            uid = s.first().id
+        else:
+            s = Estudiante(nick = request.POST["nick"])
+            s.save()
+            uid = s.id
+
+        request.session["estudiante"] = str(uid)
+        return show_home_page(request)
+    else:
+        return render(request, "idiomatic/keep_nick.html", {
+        })
+
+@is_student_registered
+def home(request):
+    return show_home_page()
+
+
+@is_student_registered
 def lista_cursos(request):
-    if "estudiante" not in request.session:
-        request.session["estudiante"] = str(uuid.uuid4())
     if "idioma" not in request.session:
         redirect("home")
     result = Idiomas.objects.get(pk=request.session["idioma"])
@@ -45,9 +67,8 @@ def lista_cursos(request):
     })
 
 
+@is_student_registered
 def lista_lecciones(request):
-    if "estudiante" not in request.session:
-        request.session["estudiante"] = str(uuid.uuid4())
     if "curso" not in request.session:
         redirect("home")
     result = Cursos.objects.get(pk=request.session["curso"])
@@ -56,9 +77,8 @@ def lista_lecciones(request):
         "session": request.session
     })
 
+@is_student_registered
 def leccion(request):
-    if "estudiante" not in request.session:
-        request.session["estudiante"] = str(uuid.uuid4())
     if "leccion" not in request.session:
         return redirect("home")
     leccion = Lecciones.objects.get(pk=request.session["leccion"])
@@ -67,9 +87,8 @@ def leccion(request):
         "title": leccion.nombre,
     })
 
+@is_student_registered
 def get_next_frase(request):
-    if "estudiante" not in request.session:
-        request.session["estudiante"] = str(uuid.uuid4())
     if "leccion" not in request.session:
         redirect("home")
     estado = request.session["estado"]
@@ -105,9 +124,9 @@ def get_next_frase(request):
 
 def calificar(request, id, punto):
     estudiante = request.session["estudiante"]
-    ps = Progreso.objects.filter(Q(frase_id=id) & Q(estudiante=estudiante))
+    ps = Progreso.objects.filter(Q(frase_id=id) & Q(estudiante_id=estudiante))
     if len(ps) == 0:
-        progreso = Progreso(estudiante=estudiante, frase_id=id)
+        progreso = Progreso(estudiante_id=estudiante, frase_id=id)
         progreso.save()
     else:
         progreso = ps[0]

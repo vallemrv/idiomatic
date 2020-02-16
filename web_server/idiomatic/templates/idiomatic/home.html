@@ -8,10 +8,10 @@
               onclick="location.href='{% url 'sel_idioma' id=obj.id %}'">
               <div class="row">
                 <div class="col-9">
-                  {{obj.get_idioma_display}}
+                   {{obj.get_idioma_display}}
                 </div>
                 <div class="col-3">
-                   <img height="50" src="{% url 'view_logo' id=obj.id %}" alt="{{obj.nombre}}">
+                   <img height="50" class="img-fluid" src="{% url 'view_logo' id=obj.id %}" alt="{{obj.nombre}}">
                 </div>
               </div>
           </li>

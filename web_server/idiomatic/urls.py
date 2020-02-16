@@ -43,6 +43,7 @@ urlpatterns = [
     url(r'^set_curso_gs/(?P<id>-?\d*)/$', views.set_curso_gs, name="set_curso_gs"),
     url(r'^set_idioma_gs/(?P<id>-?\d*)/$', views.set_idioma_gs, name="set_idioma_gs"),
     url(r'^crear_leccion/$', views.crear_leccion, name="crear_leccion"),
+    url(r'^create_student/$', views.create_student, name="create_student"),
     url(r'^get_final/$', views.get_final, name="get_final"),
     url(r'^$', views.home, name="home"),
 ]

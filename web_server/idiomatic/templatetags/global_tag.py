@@ -25,7 +25,7 @@ def brand(val):
 
 @register.filter
 def sepuedemostrar(session, val):
-    if val in session:
+    if session !=None and val in session:
         return True
     return False
 

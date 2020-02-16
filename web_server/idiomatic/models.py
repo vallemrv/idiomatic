@@ -115,9 +115,12 @@ class Helpers(models.Model):
         verbose_name = "Helper"
         verbose_name_plural = 'Helpers'
 
+class Estudiante(models.Model):
+    nick = models.CharField(max_length=100, null=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
 class Progreso(models.Model):
-    estudiante = models.CharField(max_length=100, default=uuid.uuid4)
+    estudiante = models.ForeignKey("Estudiante", on_delete=models.CASCADE)
     frase = models.ForeignKey("Frases", on_delete=models.CASCADE)
     puntos = models.IntegerField(default=0)
 
