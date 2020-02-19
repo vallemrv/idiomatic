@@ -46,16 +46,26 @@ def crear_leccion(request):
             lec.nombre = nombre=request.POST["nombre"]
             lec.objetivo = request.POST["des"]
             lec.save()
-            lec.frases_set.all().delete()
+            #lec.frases_set.all().delete()
         else:
             lec = Lecciones(curso_id=request.session["curso_gs"],
                             nombre=request.POST["nombre"],
                             objetivo=request.POST["des"])
             lec.save()
 
+        frases = lec.frases_set.all()
+        if len(lineas_local) < len(frases):
+            for f in frases[len(lineas):len(frases)]:
+                f.delete()
         for i in range(0, len(lineas_local)):
-            lec.frases_set.create(propia=lineas_local[i],
-                                  extranjera=lienas_extranjero[i])
+            if i < len(frases):
+                frases[i].propia=lineas_local[i]
+                frases[i].extranjera=lienas_extranjero[i]
+                frases[i].save()
+            else:
+                lec.frases_set.create(propia=lineas_local[i],
+                                      extranjera=lienas_extranjero[i])
+
         return redirect("lista_lecciones_gs", id=request.session["curso_gs"])
 
     lec = Lecciones.objects.filter(id=request.session["leccion_gs"])
