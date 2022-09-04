@@ -33,7 +33,6 @@ def show_home_page(request):
     })
 
 def create_student(request):
-    print(request.POST)
     if "nick" in request.POST and request.POST["nick"] != "":
         nick = request.POST["nick"]
         uid = ""

@@ -153,7 +153,7 @@ def auto_delete_file_on_change(sender, instance, **kwargs):
 
     try:
         old_file = sender.objects.get(pk=instance.pk).fichero
-    except MediaFile.DoesNotExist:
+    except:
         return False
 
     new_file = instance.fichero

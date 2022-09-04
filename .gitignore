@@ -4,8 +4,9 @@ __pycache__/
 *$py.class
 
 .DB_Store
-*/web_server
+
 */*/media
+*.sqlite3
 
 
 # C extensions
