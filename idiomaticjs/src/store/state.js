@@ -1,5 +1,6 @@
 export default{
   error:null,
   ocupado: false,
-  alert: null
+  alert: null,
+  user:null,
 }

@@ -6,10 +6,8 @@ from django.views.decorators.csrf import csrf_exempt
 def crear_leccion(request):
     return JsonResponse({})
 
-
 @csrf_exempt
 def is_username_free(request):
-    print(request.method)
     if request.method == "POST":
         user = User.objects.filter(username=request.POST["username"]).first()
         if user:

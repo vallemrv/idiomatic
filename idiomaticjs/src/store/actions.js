@@ -1,6 +1,5 @@
 import * as types from './mutations_type'
-import * as API from '@/api'
-import state from './state'
+import  API from '@/api'
 
 export default{
     is_username_free({commit}, params){
@@ -12,7 +11,6 @@ export default{
             }else{
                 commit(types.FAILURE, res.errors);
             }
-            console.log(r)
          }
         ).catch((error)=>{
             commit(types.FAILURE, error);
@@ -31,5 +29,25 @@ export default{
         }).catch((error)=>{
             commit(types.FAILURE, error);
         })
+    },
+    login({commit, state}, {username, password}){
+        commit(types.GET_REQUEST)
+        let p = new FormData()
+        p.append("username", username)
+        p.append("password", password)
+        API.login(p).then((r)=>{
+            let res = r.data
+            if(res.susscess){
+                commit(types.SUSSCESS, null);
+                state.user = res.token;
+                localStorage.setItem("user", res.token);
+            }else{
+                commit(types.FAILURE, res.errors);
+            }
+
+        }).catch(()=>{
+            commit(types.FAILURE, "Credenciales no validas");
+        })
+
     }
 }

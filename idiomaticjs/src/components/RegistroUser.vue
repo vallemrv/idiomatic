@@ -7,7 +7,7 @@
             <v-card-text>
                 <v-form>
                     <v-alert color="warning" v-if="alert!=''">{{alert}}</v-alert>
-                    <v-text-field placeholder="Username"  variant="underlined" :rule="[...rules_required]" v-model="username" @focusout="exit_username()"></v-text-field>
+                    <v-text-field placeholder="Username"  variant="underlined" v-model="username" @focusout="exit_username()"></v-text-field>
                     <v-text-field placeholder="Nombre"  variant="underlined" v-model="nombre"></v-text-field>
                     <v-text-field placeholder="Apellido"  variant="underlined" v-model="apellido"></v-text-field>
                     <v-text-field placeholder="email" variant="underlined" v-model="email" type="email"></v-text-field>
@@ -17,6 +17,7 @@
             </v-card-text>
             <v-card-actions>
                 <v-spacer></v-spacer>
+                <v-btn @click="$router.back()">Cancelar</v-btn>
                 <v-btn @click="enviar()">Aceptar</v-btn>
             </v-card-actions>
         </v-card>
@@ -36,9 +37,6 @@ data(){
         username:"",
         re_pass:"",
         alert:"",
-        rules_required: [
-            v => !!v || 'Field is required'
-        ]
     }
 },
 computed:{
