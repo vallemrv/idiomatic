@@ -117,6 +117,7 @@ class Helpers(models.Model):
 
 class Estudiante(models.Model):
     nick = models.CharField(max_length=100, null=False)
+    pass_field = models.CharField(max_length=100, null=False)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
 class Progreso(models.Model):
